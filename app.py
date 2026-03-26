@@ -14,10 +14,16 @@ if api_key:
 
 # Constants
 DOC_TYPES = ["Contract", "Case Law", "Statute"]
+AVAILABLE_MODELS = [
+    "gemini-1.5-flash", 
+    "gemini-1.5-flash-latest", 
+    "gemini-1.5-pro",
+    "gemini-pro"
+]
 
-def get_legal_analysis(content, doc_type):
+def get_legal_analysis(content, doc_type, model_name):
     """Calls Gemini API to perform legal analysis."""
-    model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+    model = genai.GenerativeModel(model_name) 
     
     system_instruction = """
     You are LexisBridge, a professional legal assistant. 
@@ -109,6 +115,7 @@ def main():
         st.write("Professional Legal Audit Engine")
         st.divider()
         
+        selected_model = st.selectbox("AI Model", AVAILABLE_MODELS)
         doc_type = st.selectbox("Document Type", DOC_TYPES)
         uploaded_file = st.file_uploader("Upload Document (.txt, .md)", type=['txt', 'md'])
         
@@ -126,7 +133,7 @@ def main():
         if st.button("🚀 Run Semantic Audit", type="primary"):
             with st.spinner("LexisBridge is auditing the document..."):
                 try:
-                    result = get_legal_analysis(content, doc_type)
+                    result = get_legal_analysis(content, doc_type, selected_model)
                     
                     # Executive Summary
                     st.markdown("### 📝 Executive Summary")
