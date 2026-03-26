@@ -17,7 +17,7 @@ DOC_TYPES = ["Contract", "Case Law", "Statute"]
 
 def get_legal_analysis(content, doc_type):
     """Calls Gemini API to perform legal analysis."""
-    model = genai.GenerativeModel('gemini-1.5-flash') 
+    model = genai.GenerativeModel('gemini-1.5-flash-latest') 
     
     system_instruction = """
     You are LexisBridge, a professional legal assistant. 
