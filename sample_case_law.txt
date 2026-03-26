@@ -1,0 +1,22 @@
+CASE SUMMARY: Smith v. Horizon Tech (2024)
+
+COURT: Supreme Court of Digital Commerce
+DATE: January 15, 2024
+CITATION: 2024 SCDC 142
+
+FACTS:
+The plaintiff, Jane Smith, entered into a software-as-a-service (SaaS) agreement with Horizon Tech. The agreement contained a clause allowing Horizon Tech to modify the terms of service at any time without prior notice. In August 2023, Horizon Tech modified the data retention policy, resulting in the deletion of Smith's historical business data. Smith sued for breach of contract and gross negligence.
+
+ISSUE:
+Whether a "unilateral modification" clause in a digital contract is enforceable when it results in the loss of critical user data without adequate notice.
+
+HOLDING:
+The Court held that while unilateral modification clauses are generally enforceable in the tech industry, they are subject to the "Covenant of Good Faith and Fair Dealing." The Court found that Horizon Tech breached this covenant by failing to provide "reasonable notice" for changes that significantly impact the core value of the service provided.
+
+REASONING:
+1. Digital contracts are often contracts of adhesion, but they do not grant absolute power to the service provider.
+2. Reasonable notice is a prerequisite for enforcing modifications that result in the permanent loss of property or data.
+3. The lack of an "opt-out" or "data export" period rendered the modification unconscionable in this specific context.
+
+DECISION:
+Judgment for the Plaintiff. Horizon Tech ordered to pay $50,000 in compensatory damages.

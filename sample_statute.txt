@@ -1,0 +1,19 @@
+DATA PRIVACY AND PROTECTION ACT (DPPA) - SECTION 402
+
+SECTION 402: OBLIGATIONS OF DATA CONTROLLERS
+
+(a) General Duty of Care.
+Every data controller shall implement appropriate technical and organizational measures to ensure a level of security appropriate to the risk of processing personal data.
+
+(b) Data Breach Notification.
+In the event of a personal data breach, the data controller shall, without undue delay and, where feasible, not later than 48 hours after having become aware of it, notify the Data Protection Authority.
+
+(c) Penalties for Non-Compliance.
+(1) Administrative Fines. Non-compliance with the provisions of this Section shall be subject to administrative fines of up to $10,000,000 or 2% of the total worldwide annual turnover of the preceding financial year, whichever is higher.
+(2) Criminal Liability. Intentional failure to report a major data breach involving more than 10,000 records may result in criminal prosecution of the responsible officers.
+
+(d) Exemptions.
+Small businesses with fewer than 5 employees and annual revenue below $100,000 are exempt from the 48-hour notification requirement, provided they notify authorities within 7 days.
+
+(e) Definitions.
+"Personal Data" means any information relating to an identified or identifiable natural person.
