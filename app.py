@@ -92,10 +92,15 @@ def main():
         # Fetch models and filter for those that support content generation
         # In the new google-genai SDK, the attribute is 'supported_methods'
         all_models = list(client.models.list())
+        
+        # Debug info for the developer/user
+        if not all_models:
+            st.sidebar.info("The API returned an empty model list. This can happen if the API key is restricted or the Generative AI API is not enabled for your project.")
+        
         model_names = [
             m.name.replace("models/", "") 
             for m in all_models 
-            if hasattr(m, 'supported_methods') and "generateContent" in m.supported_methods
+            if hasattr(m, 'supported_methods') and any("generateContent" in method for method in m.supported_methods)
         ]
         
         # Sort to put preferred models at the top
@@ -103,7 +108,10 @@ def main():
         model_names.sort(key=lambda x: (x not in preferred, preferred.index(x) if x in preferred else x))
         
         if not model_names:
-            st.sidebar.info("No models found via API. Using built-in defaults.")
+            if all_models:
+                st.sidebar.info(f"Found {len(all_models)} models, but none support 'generateContent'. Using defaults.")
+            else:
+                st.sidebar.info("No models found via API. Using built-in defaults.")
             model_names = AVAILABLE_MODELS
     except Exception as e:
         # Show the actual error in the sidebar for debugging
