@@ -84,6 +84,26 @@ def main():
     # Initialize Client
     client = genai.Client(api_key=api_key)
 
+    # Dynamically fetch available models
+    try:
+        # Fetch models and filter for those that support content generation
+        all_models = list(client.models.list())
+        model_names = [
+            m.name.replace("models/", "") 
+            for m in all_models 
+            if "generateContent" in m.supported_generation_methods
+        ]
+        
+        # Sort to put preferred models at the top
+        preferred = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest"]
+        model_names.sort(key=lambda x: (x not in preferred, preferred.index(x) if x in preferred else x))
+        
+        if not model_names:
+            model_names = AVAILABLE_MODELS
+    except Exception as e:
+        st.warning(f"Could not fetch model list: {e}. Using default list.")
+        model_names = AVAILABLE_MODELS
+
     # Custom CSS for LexisBridge Branding
     st.markdown("""
         <style>
@@ -138,19 +158,10 @@ def main():
         st.write("Professional Legal Audit Engine")
         st.divider()
         
-        selected_model = st.selectbox("AI Model", AVAILABLE_MODELS, index=0) # Default to gemini-2.0-flash
+        selected_model = st.selectbox("AI Model", model_names, index=0)
         doc_type = st.selectbox("Document Type", DOC_TYPES)
         uploaded_file = st.file_uploader("Upload Document (.txt, .md)", type=['txt', 'md'])
         
-        st.divider()
-        if st.button("🔍 List Available Models"):
-            try:
-                models = [m.name for m in client.models.list()]
-                st.write("Models available for your API key:")
-                st.json(models)
-            except Exception as e:
-                st.error(f"Could not list models: {e}")
-
         st.divider()
         st.caption("LexisBridge uses AI to assist in analysis. Consult with legal counsel for final decisions.")
 
@@ -163,7 +174,7 @@ def main():
             st.markdown(f"<h1 class='main-header'>Analysis: {uploaded_file.name}</h1>", unsafe_allow_html=True)
         
         if st.button("🚀 Run Semantic Audit", type="primary"):
-            with st.spinner("LexisBridge is auditing the document..."):
+            with st.spinner(f"LexisBridge is auditing with {selected_model}..."):
                 try:
                     result = get_legal_analysis(client, content, doc_type, selected_model)
                     
