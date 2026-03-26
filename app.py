@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 import os
 from dotenv import load_dotenv
@@ -9,49 +10,60 @@ load_dotenv()
 
 # Configure Gemini API
 api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
 
 # Constants
 DOC_TYPES = ["Contract", "Case Law", "Statute"]
 AVAILABLE_MODELS = [
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite-preview-02-05",
     "gemini-1.5-flash", 
     "gemini-1.5-flash-latest", 
     "gemini-1.5-pro",
     "gemini-pro"
 ]
 
-def get_legal_analysis(content, doc_type, model_name):
+def get_legal_analysis(client, content, doc_type, model_name):
     """Calls Gemini API to perform legal analysis."""
-    model = genai.GenerativeModel(model_name) 
-    
-    system_instruction = """
-    You are LexisBridge, a professional legal assistant. 
-    Analyze legal documents with extreme precision. 
-    Identify risks, provide a summary, and give actionable recommendations.
-    Output STRICTLY JSON with this structure:
-    {
-      "summary": "...",
-      "risks": [
+    try:
+        # Ensure model name doesn't have 'models/' prefix
+        clean_model_name = model_name.replace("models/", "")
+        
+        system_instruction = """
+        You are LexisBridge, a professional legal assistant. 
+        Analyze legal documents with extreme precision. 
+        Identify risks, provide a summary, and give actionable recommendations.
+        Output STRICTLY JSON with this structure:
         {
-          "title": "...", 
-          "severity": "Low|Medium|High|Critical", 
-          "description": "...", 
-          "recommendation": "...", 
-          "citation": "..."
+          "summary": "...",
+          "risks": [
+            {
+              "title": "...", 
+              "severity": "Low|Medium|High|Critical", 
+              "description": "...", 
+              "recommendation": "...", 
+              "citation": "..."
+            }
+          ]
         }
-      ]
-    }
-    """
-    
-    prompt = f"Analyze this {doc_type}:\n\n{content}"
-    
-    response = model.generate_content(
-        f"{system_instruction}\n\n{prompt}",
-        generation_config={"response_mime_type": "application/json"}
-    )
-    
-    return json.loads(response.text)
+        """
+        
+        prompt = f"Analyze this {doc_type}:\n\n{content}"
+        
+        response = client.models.generate_content(
+            model=clean_model_name,
+            contents=f"{system_instruction}\n\n{prompt}",
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            )
+        )
+        
+        if not response.text:
+            raise Exception("The model returned an empty response. This might be due to safety filters or an internal error.")
+            
+        return json.loads(response.text)
+    except Exception as e:
+        # Re-raise with more context
+        raise Exception(f"Gemini API Error ({model_name}): {str(e)}")
 
 def main():
     # Page Config
@@ -60,6 +72,14 @@ def main():
         page_icon="⚖️", 
         layout="wide"
     )
+
+    # Check for API Key
+    if not api_key:
+        st.error("⚠️ GEMINI_API_KEY not found. Please check your .env file or environment variables.")
+        st.stop()
+
+    # Initialize Client
+    client = genai.Client(api_key=api_key)
 
     # Custom CSS for LexisBridge Branding
     st.markdown("""
@@ -115,10 +135,19 @@ def main():
         st.write("Professional Legal Audit Engine")
         st.divider()
         
-        selected_model = st.selectbox("AI Model", AVAILABLE_MODELS)
+        selected_model = st.selectbox("AI Model", AVAILABLE_MODELS, index=0) # Default to gemini-2.0-flash
         doc_type = st.selectbox("Document Type", DOC_TYPES)
         uploaded_file = st.file_uploader("Upload Document (.txt, .md)", type=['txt', 'md'])
         
+        st.divider()
+        if st.button("🔍 List Available Models"):
+            try:
+                models = [m.name for m in client.models.list()]
+                st.write("Models available for your API key:")
+                st.json(models)
+            except Exception as e:
+                st.error(f"Could not list models: {e}")
+
         st.divider()
         st.caption("LexisBridge uses AI to assist in analysis. Consult with legal counsel for final decisions.")
 
@@ -133,7 +162,7 @@ def main():
         if st.button("🚀 Run Semantic Audit", type="primary"):
             with st.spinner("LexisBridge is auditing the document..."):
                 try:
-                    result = get_legal_analysis(content, doc_type, selected_model)
+                    result = get_legal_analysis(client, content, doc_type, selected_model)
                     
                     # Executive Summary
                     st.markdown("### 📝 Executive Summary")
