@@ -97,11 +97,23 @@ def main():
         if not all_models:
             st.sidebar.info("The API returned an empty model list. This can happen if the API key is restricted or the Generative AI API is not enabled for your project.")
         
+        # Broaden the filter: Look for any model with 'gemini' in the name 
+        # that supports some form of generation.
         model_names = [
             m.name.replace("models/", "") 
             for m in all_models 
-            if hasattr(m, 'supported_methods') and any("generateContent" in method for method in m.supported_methods)
+            if "gemini" in m.name.lower() and 
+               hasattr(m, 'supported_methods') and 
+               any("generate" in method.lower() for method in m.supported_methods)
         ]
+        
+        # If the specific method check is still too strict, just take all gemini models
+        if not model_names:
+            model_names = [
+                m.name.replace("models/", "") 
+                for m in all_models 
+                if "gemini" in m.name.lower()
+            ]
         
         # Sort to put preferred models at the top
         preferred = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest"]
@@ -109,7 +121,7 @@ def main():
         
         if not model_names:
             if all_models:
-                st.sidebar.info(f"Found {len(all_models)} models, but none support 'generateContent'. Using defaults.")
+                st.sidebar.info(f"Found {len(all_models)} models, but none matched the 'gemini' criteria. Using defaults.")
             else:
                 st.sidebar.info("No models found via API. Using built-in defaults.")
             model_names = AVAILABLE_MODELS
