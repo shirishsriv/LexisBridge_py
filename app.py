@@ -14,9 +14,9 @@ api_key = os.getenv("GEMINI_API_KEY")
 # Constants
 DOC_TYPES = ["Contract", "Case Law", "Statute"]
 AVAILABLE_MODELS = [
+    "gemini-1.5-flash", 
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite-preview-02-05",
-    "gemini-1.5-flash", 
     "gemini-1.5-flash-latest", 
     "gemini-1.5-pro",
     "gemini-pro"
@@ -62,8 +62,11 @@ def get_legal_analysis(client, content, doc_type, model_name):
             
         return json.loads(response.text)
     except Exception as e:
+        error_msg = str(e)
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            raise Exception(f"Rate limit reached for {model_name}. Please wait a few seconds or try switching to 'gemini-1.5-flash' in the sidebar.")
         # Re-raise with more context
-        raise Exception(f"Gemini API Error ({model_name}): {str(e)}")
+        raise Exception(f"Gemini API Error ({model_name}): {error_msg}")
 
 def main():
     # Page Config
