@@ -90,11 +90,12 @@ def main():
     model_names = []
     try:
         # Fetch models and filter for those that support content generation
+        # In the new google-genai SDK, the attribute is 'supported_methods'
         all_models = list(client.models.list())
         model_names = [
             m.name.replace("models/", "") 
             for m in all_models 
-            if "generateContent" in m.supported_generation_methods
+            if hasattr(m, 'supported_methods') and "generateContent" in m.supported_methods
         ]
         
         # Sort to put preferred models at the top
@@ -102,9 +103,12 @@ def main():
         model_names.sort(key=lambda x: (x not in preferred, preferred.index(x) if x in preferred else x))
         
         if not model_names:
+            st.sidebar.info("No models found via API. Using built-in defaults.")
             model_names = AVAILABLE_MODELS
     except Exception as e:
-        st.sidebar.warning(f"Could not fetch dynamic model list. Using defaults.")
+        # Show the actual error in the sidebar for debugging
+        st.sidebar.warning(f"⚠️ API Connection Issue: {str(e)}")
+        st.sidebar.info("Falling back to default model list.")
         model_names = AVAILABLE_MODELS
 
     # Custom CSS for LexisBridge Branding
@@ -170,7 +174,7 @@ def main():
             if st.button("🔍 List All Models"):
                 try:
                     all_m = list(client.models.list())
-                    st.json([{"name": m.name, "methods": m.supported_generation_methods} for m in all_m])
+                    st.json([{"name": m.name, "methods": getattr(m, 'supported_methods', 'N/A')} for m in all_m])
                 except Exception as e:
                     st.error(f"Error: {e}")
         
