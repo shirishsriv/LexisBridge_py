@@ -14,10 +14,10 @@ api_key = os.getenv("GEMINI_API_KEY")
 # Constants
 DOC_TYPES = ["Contract", "Case Law", "Statute"]
 AVAILABLE_MODELS = [
-    "gemini-1.5-flash", 
     "gemini-2.0-flash",
-    "gemini-2.0-flash-lite-preview-02-05",
+    "gemini-1.5-flash", 
     "gemini-1.5-flash-latest", 
+    "gemini-2.0-flash-lite-preview-02-05",
     "gemini-1.5-pro",
     "gemini-pro"
 ]
@@ -65,6 +65,8 @@ def get_legal_analysis(client, content, doc_type, model_name):
         error_msg = str(e)
         if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
             raise Exception(f"Rate limit reached for {model_name}. Please wait a few seconds or try switching to 'gemini-1.5-flash' in the sidebar.")
+        if "404" in error_msg or "NOT_FOUND" in error_msg:
+            raise Exception(f"Model '{model_name}' was not found or is not supported for your API key. Please try selecting 'gemini-2.0-flash' or 'gemini-1.5-flash-latest' from the sidebar.")
         # Re-raise with more context
         raise Exception(f"Gemini API Error ({model_name}): {error_msg}")
 
@@ -85,6 +87,7 @@ def main():
     client = genai.Client(api_key=api_key)
 
     # Dynamically fetch available models
+    model_names = []
     try:
         # Fetch models and filter for those that support content generation
         all_models = list(client.models.list())
@@ -101,7 +104,7 @@ def main():
         if not model_names:
             model_names = AVAILABLE_MODELS
     except Exception as e:
-        st.warning(f"Could not fetch model list: {e}. Using default list.")
+        st.sidebar.warning(f"Could not fetch dynamic model list. Using defaults.")
         model_names = AVAILABLE_MODELS
 
     # Custom CSS for LexisBridge Branding
@@ -161,6 +164,15 @@ def main():
         selected_model = st.selectbox("AI Model", model_names, index=0)
         doc_type = st.selectbox("Document Type", DOC_TYPES)
         uploaded_file = st.file_uploader("Upload Document (.txt, .md)", type=['txt', 'md'])
+        
+        st.divider()
+        with st.expander("🛠️ Debug Tools"):
+            if st.button("🔍 List All Models"):
+                try:
+                    all_m = list(client.models.list())
+                    st.json([{"name": m.name, "methods": m.supported_generation_methods} for m in all_m])
+                except Exception as e:
+                    st.error(f"Error: {e}")
         
         st.divider()
         st.caption("LexisBridge uses AI to assist in analysis. Consult with legal counsel for final decisions.")
